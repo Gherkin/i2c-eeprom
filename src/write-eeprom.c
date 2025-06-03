@@ -1,5 +1,4 @@
 #include <linux/i2c-dev.h>
-#include <i2c/smbus.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,6 +28,17 @@ int main(int argc, char *argv[]) {
     fseek(input_file, 0, SEEK_END);
     long file_size = ftell(input_file);
     fseek(input_file, 0, SEEK_SET);
+
+    if(address_len == 8 && file_size > 256) {
+        fprintf(stderr, "Error: File size exceeds 256 bytes for 8-bit address length.\n");
+        fclose(input_file);
+        return 1;
+    } else if(address_len == 16 && file_size > 65536) {
+        fprintf(stderr, "Error: File size exceeds 65536 bytes for 16-bit address length.\n");
+        fclose(input_file);
+        return 1;
+    }
+
     buffer = malloc(file_size);
     if (!buffer) {
         fprintf(stderr, "Error: Could not allocate memory for buffer.\n");
@@ -47,7 +57,7 @@ int main(int argc, char *argv[]) {
 
     for(uint16_t i = 0; i < bytes_read; i++) {
         if(i % 256 == 0) {
-            printf("Writing to device 0x%02x on bus /dev/i2c-%d, progress 0x%04x\n", dev_address, bus_index, i);
+            fprintf(stderr, "Writing to device 0x%02x on bus /dev/i2c-%d, progress 0x%04x\n", dev_address, bus_index, i);
         }
 
         int error = i2c_write_byte(fd, dev_address, i, buffer[i]); 

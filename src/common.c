@@ -1,5 +1,5 @@
 #include <linux/i2c-dev.h>
-#include <i2c/smbus.h>
+#include <linux/i2c.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/ioctl.h>

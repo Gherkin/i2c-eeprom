@@ -1,15 +1,17 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -I./src
-SRC = src/arg_handling.c src/common.c /usr/lib/x86_64-linux-gnu/libi2c.so
-TARGET = i2c-eeprom
+CFLAGS = -Wall -Wextra -I./src -I/usr/include
 
-all: $(TARGET)
+-include config.mk
+
+SRC = src/arg_handling.c src/common.c
+
+all: read-eeprom write-eeprom
 
 read-eeprom: src/read-eeprom.c $(SRC)
-	$(CC) $(CFLAGS) -o read-eeprom $(SRC) src/read-eeprom.c
+	$(CC) $(CFLAGS) $(KERNEL_INCLUDE) -o read-eeprom $(SRC) src/read-eeprom.c
 
 write-eeprom: src/write-eeprom.c $(SRC)
-	$(CC) $(CFLAGS) -o write-eeprom $(SRC) src/write-eeprom.c
+	$(CC) $(CFLAGS) $(KERNEL_INCLUDE) -o write-eeprom $(SRC) src/write-eeprom.c
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) config.mk
