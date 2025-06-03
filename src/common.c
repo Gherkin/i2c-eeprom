@@ -18,26 +18,36 @@ int open_i2c_device(int bus_number) {
     return fd;
 }
 
-int i2c_write_byte(int fd, int addr, uint16_t reg, uint8_t value) {
+int i2c_write_byte(int fd, int addr, uint16_t reg, uint8_t value, int address_len) {
     if (ioctl(fd, I2C_SLAVE, addr) < 0) {
         perror("Failed to set I2C slave address");
         return -1;
     }
-    uint8_t buf[3];
-    buf[0] = (reg >> 8) & 0xFF; // high byte of address
-    buf[1] = reg & 0xFF;        // low byte of address
-    buf[2] = value;             // data byte
+    if(address_len == 16) {
+        int buf_len = 3;
+        uint8_t buf[3];
+        buf[0] = (reg >> 8) & 0xFF; // high byte of address
+        buf[1] = reg & 0xFF;        // low byte of address
+        buf[2] = value;             // data byte
+    } else if(address_len == 8) {
+        int buf_len = 2;
+        uint8_t buf[2];
+        buf[0] = reg & 0xFF;        // address byte
+        buf[1] = value;             // data byte
+    } else {
+        fprintf(stderr, "Unsupported address length: %d\n", address_len);
+        return -1;
+    }
 
     int tries = 0;
     while (tries < 100) {
-        ssize_t written = write(fd, buf, 3);
+        ssize_t written = write(fd, buf, buf_len);
         if( written < 0) {
             tries++;
-        } else if (written != 3) {
-            fprintf(stderr, "Partial write to I2C device: expected 3 bytes, wrote %zd bytes\n", written);
+        } else if (written != buf_len) {
+            fprintf(stderr, "Partial write to I2C device: expected %d bytes, wrote %zd bytes\n", buf_len, written);
             return -1;
         } else {
-            // Successfully wrote 3 bytes
             return 0;
         }
     }
@@ -45,7 +55,6 @@ int i2c_write_byte(int fd, int addr, uint16_t reg, uint8_t value) {
         perror("Failed to write byte to I2C device after multiple attempts");
         return -1;
     }
-    //usleep(10000);
     return 0;
 }
 
