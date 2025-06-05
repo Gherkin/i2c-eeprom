@@ -9,14 +9,16 @@ int address_len = 16; // Default address length
 int bus_index = -1;
 uint8_t dev_address = 0x50; // Default device address
 char *bin_file = NULL;
+int data_len = 32768; // Default data length
 
 void display_help() {
     printf("Usage: %s [options] bin-file\n", "i2c-eeprom");
     printf("Options:\n");
     printf("  -h, --help                    Display this help text\n");
-    printf("  -l, --address-len [length]    Set the address length (default 16)\n");
+    printf("  -a, --address-len [length]    Set the address length (default 16)\n");
     printf("  -b, --bus-index [index]       The I2C bus index (0 for /dev/i2c-0)\n");
     printf("  -d, --dev-address [addr]      The device address in hex (default 0x50)\n");
+    printf("  -l, --data-len [length]       Set the data length in bytes (default 32768)\n");
     printf("\n");
 
 }
@@ -37,7 +39,7 @@ int parse_arguments(int argc, char *argv[]) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             display_help();
             return -1; // Exit after displaying help
-        } else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--address-len") == 0) {
+        } else if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--address-len") == 0) {
             if (i + 1 < argc) {
                 address_len = atoi(argv[++i]);
                 if (address_len != 8 && address_len != 16) {
@@ -69,6 +71,19 @@ int parse_arguments(int argc, char *argv[]) {
                 }
             } else {
                 fprintf(stderr, "Error: Missing value for --dev-address option.\n");
+                return -1;
+            }
+        } else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--data-len") == 0) {
+            if (i + 1 < argc) {
+                data_len = atoi(argv[++i]);
+                if (data_len <= 0) {
+                    fprintf(stderr, "Error: Invalid data length. Must be a positive integer.\n");
+                    return -1;
+                }
+                // Set the data length in your application context
+                printf("Data length set to %d bytes.\n", data_len);
+            } else {
+                fprintf(stderr, "Error: Missing value for --data-len option.\n");
                 return -1;
             }
         } else {

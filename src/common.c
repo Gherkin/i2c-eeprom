@@ -23,15 +23,15 @@ int i2c_write_byte(int fd, int addr, uint16_t reg, uint8_t value, int address_le
         perror("Failed to set I2C slave address");
         return -1;
     }
+    uint8_t buf[3]; // Buffer to hold the address and value
+    int buf_len;
     if(address_len == 16) {
-        int buf_len = 3;
-        uint8_t buf[3];
+        buf_len = 3;
         buf[0] = (reg >> 8) & 0xFF; // high byte of address
         buf[1] = reg & 0xFF;        // low byte of address
         buf[2] = value;             // data byte
     } else if(address_len == 8) {
-        int buf_len = 2;
-        uint8_t buf[2];
+        buf_len = 2;
         buf[0] = reg & 0xFF;        // address byte
         buf[1] = value;             // data byte
     } else {
@@ -58,17 +58,22 @@ int i2c_write_byte(int fd, int addr, uint16_t reg, uint8_t value, int address_le
     return 0;
 }
 
-int i2c_read_byte_rs(int fd, int addr, uint16_t reg, uint8_t *value) {
+int i2c_read_byte_rs(int fd, int addr, uint16_t reg, uint8_t *value, int address_len) {
     struct i2c_rdwr_ioctl_data packets;
     struct i2c_msg messages[2];
 
-    uint8_t addr_buf[2];
-    addr_buf[0] = (reg >> 8) & 0xFF;
-    addr_buf[1] = reg & 0xFF;
 
     messages[0].addr  = addr;
     messages[0].flags = 0; // Write
-    messages[0].len   = 2;
+    uint8_t addr_buf[2]; // Buffer for address 
+    if(address_len == 16) {
+        addr_buf[0] = (reg >> 8) & 0xFF;
+        addr_buf[1] = reg & 0xFF;
+        messages[0].len = 2; // 2 bytes for 16-bit address
+    } else if(address_len == 8) {
+        addr_buf[0] = reg & 0xFF;
+        messages[0].len = 1; // 1 byte for 8-bit address
+    }
     messages[0].buf   = addr_buf;
 
     messages[1].addr  = addr;

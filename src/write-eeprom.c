@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Writing to device 0x%02x on bus /dev/i2c-%d, progress 0x%04x\n", dev_address, bus_index, i);
         }
 
-        int error = i2c_write_byte(fd, dev_address, i, buffer[i]); 
+        int error = i2c_write_byte(fd, dev_address, i, buffer[i], address_len); 
         if(error != 0) {
             fprintf(stderr, "Error: Failed to write byte %d to EEPROM.\n", i);
             free(buffer);

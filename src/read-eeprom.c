@@ -5,20 +5,29 @@
 #include <common.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <arg_handling.h>
 
-unsigned char buffer[32768]; // Buffer to hold read data
+unsigned char *buffer; // Buffer to hold read data
 
 int main(int argc, char *argv[]) {
-    int fd = open_i2c_device(0); // Open I2C device on bus 1
-
-    //i2c_write_word(fd, 0x50, (uint16_t) 0x0000); // Write a word to EEPROM at address 0x50
-
-    for(uint16_t i = 0; i < 32768; i++) {
-        i2c_read_byte_rs(fd, 0x50, i, &buffer[i]); // Read from EEPROM at address 0x50
-        //i2c_read_byte(fd, 0x50, buffer + i); // Read from EEPROM at address 0x50
+    if(parse_arguments(argc, argv)) {
+        return 0; // Exit after displaying help
     }
 
-    FILE *output_file = fopen("eeprom_dump.bin", "wb");
+    buffer = malloc(data_len); // Allocate memory for the buffer
+    if (!buffer) {
+        fprintf(stderr, "Error: Could not allocate memory for buffer.\n");
+        return 1;
+    }
+
+    int fd = open_i2c_device(bus_index); // Open I2C device on bus 1
+
+
+    for(uint16_t i = 0; i < data_len; i++) {
+        i2c_read_byte_rs(fd, dev_address, i, &buffer[i], address_len); // Read from EEPROM at address 0x50
+    }
+
+    FILE *output_file = fopen(bin_file, "wb");
     if (!output_file) {
         perror("Failed to open output file");
         close(fd); // Close the I2C device
